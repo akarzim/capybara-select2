@@ -23,12 +23,9 @@ module Capybara
         drop_container = ".select2-drop"
       end
 
-      [value].flatten.each do |value|
-        select2_container.find(:xpath, "a[contains(concat(' ',normalize-space(@class),' '),' select2-choice ')] | ul[contains(concat(' ',normalize-space(@class),' '),' select2-choices ')]").click
-        find(:xpath, "//body").find("#{drop_container} li", text: value).click
-      end
+      find(:xpath, "//body").find("#{drop_container} li", text: value).click
     end
-    
+
     def select2_ajax(value, options = {})
       raise "Must pass a hash containing 'from' or 'xpath'" unless options.is_a?(Hash) and [:from, :xpath].any? { |k| options.has_key? k }
 
@@ -52,9 +49,7 @@ module Capybara
         end
       end
 
-      [value].flatten.each do |value|
-        find(:xpath, "//body").find("#{drop_container} li", text: value).click
-      end
+      find(:xpath, "//body").find("#{drop_container} li", text: value).click
     end
 
     def select2_multiple(value, options = {})
