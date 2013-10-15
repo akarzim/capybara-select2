@@ -3,64 +3,47 @@ require 'rspec/core'
 
 module Capybara
   module Select2
-    def select2(value, options = {})
-      fail "Must pass a hash containing 'from' or 'xpath'" unless options.is_a?(Hash) && [:from, :xpath].any? { |k| options.key? k }
+    def select2(value, from: nil, xpath: nil, search: false)
+      fail "Must pass a hash containing 'from' or 'xpath'" unless from.present? || xpath.present?
 
-      if options.key? :xpath
-        select2_container = first(:xpath, options[:xpath])
-      else
-        select_name = options[:from]
-        select2_container = first('label', text: select_name).find(:xpath, '..').find '.select2-container'
-      end
+      select2_container = first(:xpath, xpath) if xpath.present?
+      select2_container ||= first('label', text: from).find(:xpath, '..').find '.select2-container'
 
       select2_container.find('.select2-choice').click
 
-      if options.key? :search
-        find(:xpath, '//body').find('input.select2-input').set value
-        page.execute_script '$("input.select2-input:visible").keyup();'
-        drop_container = '.select2-results'
-      else
-        drop_container = '.select2-drop'
+      if search?
+        select2_input = 'input.select2-input'
+        find(:xpath, '//body').find(select2_input).set value
+        page.execute_script(%|$("#{select2_input}:visible").keyup();|)
       end
 
+      drop_container = search? ? '.select2-results' : '.select2-drop'
       find(:xpath, '//body').find("#{drop_container} li", text: value).click
     end
 
-    def select2_ajax(value, options = {})
-      fail "Must pass a hash containing 'from' or 'xpath'" unless options.is_a?(Hash) && [:from, :xpath].any? { |k| options.key? k }
+    def select2_ajax(value, from: nil, xpath: nil, search: false, parent: '')
+      fail "Must pass a hash containing 'from' or 'xpath'" unless from.present? || xpath.present?
 
-      if options.key? :xpath
-        select2_container = first(:xpath, options[:xpath])
-      else
-        select_name = options[:from]
-        select2_container = first('label', text: select_name).find(:xpath, '..').find '.select2-container'
-      end
+      select2_container = first(:xpath, xpath) if xpath.present?
+      select2_container ||= first('label', text: from).find(:xpath, '..').find '.select2-container'
 
       select2_container.find('.select2-choice').click
 
-      drop_container = '.select2-drop'
-      if options.key? :search
-        if options.key? :parent
-          find(:xpath, '//body').find("#{options[:parent]} input.select2-input").set value
-          page.execute_script(%|$("#{options[:parent]} input.select2-input:visible").keyup();|)
-        else
-          find(:xpath, '//body').find('input.select2-input').set value
-          page.execute_script '$("input.select2-input:visible").keyup();'
-        end
+      if search?
+        select2_input = "#{parent} input.select2-input".strip
+        find(:xpath, '//body').find(select2_input).set value
+        page.execute_script(%|$("#{select2_input}:visible").keyup();|)
       end
 
+      drop_container = search? ? '.select2-results' : '.select2-drop'
       find(:xpath, '//body').find("#{drop_container} li", text: value).click
     end
 
-    def select2_multiple(values, options = {})
-      fail "Must pass a hash containing 'from' or 'xpath'" unless options.is_a?(Hash) && [:from, :xpath].any? { |k| options.key? k }
+    def select2_multiple(values, from: nil, xpath: nil)
+      fail "Must pass a hash containing 'from' or 'xpath'" unless from.present? || xpath.present?
 
-      if options.key? :xpath
-        select2_container = first(:xpath, options[:xpath])
-      else
-        select_name = options[:from]
-        select2_container = first('label', text: select_name).find(:xpath, '..').find '.select2-container'
-      end
+      select2_container = first(:xpath, xpath) if xpath.present?
+      select2_container ||= first('label', text: from).find(:xpath, '..').find '.select2-container'
 
       [values].flatten.each do |value|
         select2_container.find(:xpath, "a[contains(concat(' ',normalize-space(@class),' '),' select2-choice ')] | ul[contains(concat(' ',normalize-space(@class),' '),' select2-choices ')]").click
